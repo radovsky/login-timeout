@@ -1,0 +1,1 @@
+A Rails app that will only allow users a certain number of unsuccessful login attempts in a given time period before forcing them to wait before attempting again.
