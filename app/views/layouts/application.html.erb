@@ -6,7 +6,7 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
-    <%= flash[:errors].join(". ") + "." if flash[:errors] %>
+    <%= flash[:errors] if flash[:errors] %>
 
     <%= yield %>
     
