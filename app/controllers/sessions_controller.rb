@@ -9,7 +9,8 @@ class SessionsController < ApplicationController
       sign_in!(user)
       redirect_to root_url
     else
-      handle_problem_login
+      #parameters: failed_login_mins, lockout_mins
+      handle_problem_login(5, 10)
       redirect_to new_session_url
     end
   end

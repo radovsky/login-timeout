@@ -28,17 +28,17 @@ class ApplicationController < ActionController::Base
     redirect_to new_user_url unless signed_in?
   end
   
-  def should_lock_out?(user)
+  def should_lock_out?(user, lockout_mins=10)
     user.failed_login_attempts > 2 &&
-    user.failed_login_time > 10.minutes.ago
+    user.failed_login_time > lockout_mins.minutes.ago
   end
   
-  def failed_attempt(user)
+  def failed_attempt(user, failed_login_mins=5, lockout_mins=10)
     user.failed_login_attempts += 1
     if user.failed_login_attempts == 1
       user.failed_login_time = Time.now
     elsif user.failed_login_attempts >= 3
-      if user.failed_login_time > 10.minutes.ago
+      if user.failed_login_time > failed_login_mins.minutes.ago
         user.lockout_time = Time.now
       else
         user.failed_login_attempts = 1
@@ -46,11 +46,15 @@ class ApplicationController < ActionController::Base
       end
     end
     user.save
+    set_failed_attempt_errors(user, lockout_mins)
+  end
+  
+  def set_failed_attempt_errors(user, lockout_mins)
     remaining = 3 - user.failed_login_attempts
     if remaining == 0
       flash[:errors] = [
         "You are locked out, #{user.username}",
-        "Try again in 10 minutes"
+        "Try again in #{lockout_mins} minutes"
       ]
     else
       flash[:errors] = [
@@ -60,17 +64,17 @@ class ApplicationController < ActionController::Base
     end
   end
   
-  def handle_problem_login
+  def handle_problem_login(failed_login_mins=5, lockout_mins=10)
     user = User.find_by username: params[:user][:username]
-    if user && should_lock_out?(user)
-      mins = ((user.lockout_time + 600 - Time.now) / 60).to_i
-      secs = ((user.lockout_time + 600 - Time.now) % 60).to_i
+    if user && should_lock_out?(user, lockout_mins)
+      mins = ((user.lockout_time + lockout_mins * 60 - Time.now) / 60).to_i
+      secs = ((user.lockout_time + lockout_mins * 60 - Time.now) % 60).to_i
       flash[:errors] = [
         "You are locked out, #{user.username}",
         "Try again in #{mins} minutes, #{secs} seconds"
       ]
     elsif user
-      failed_attempt(user)
+      failed_attempt(user, failed_login_mins, lockout_mins)
     else
       flash[:errors] = [
         "Username and/or password is invalid"
