@@ -15,6 +15,11 @@
  */
 @import 'bootstrap';
 
-body {
-    padding:50px;
+form, h1 {
+    padding-left:20px;
+    padding-top:10px;
+}
+
+div#errors {
+    padding-left:20px;
 }
